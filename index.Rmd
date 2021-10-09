@@ -1,0 +1,289 @@
+---
+title: "Reliability and Validity"
+author: "Ron0128"
+date: "`r format(Sys.time(), '%Y/%m/%d')`"
+output: 
+  html_document:
+      toc: TRUE
+      toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	fig.height = 8,
+	fig.width = 8,
+	message = FALSE,
+	warning = FALSE)
+```
+
+# はじめに  
+
+* 尺度の信頼性と妥当性について調べたことをメモしています  
+
+* COnsensus-based Standards for the selection of health Measurement INstruments (COSMIN)をもとにしています  
+
+* 現時点では, リッカート尺度の作成, 信頼性と妥当性の検討, バイアスのリスクの評価に必要な指標とコードを整理しています(★が該当)
+
+* お気づきの点や修正点があったらIssuesにて教えていただけると嬉しいです  
+
+## ガイドライン  
+
+* [COSMIN](https://www.cosmin.nl/)    
+  + COSMIN公式サイトのトップページ  
+  
+* [COSMIN methodology for systematic reviews of Patient‐Reported Outcome Measures (PROMs) user manual](https://www.cosmin.nl/)    
+  + 
+  
+* [JAPANESE VERSION OF THE RISK OF BIAS CHECKLIST](https://www.cosmin.nl/wp-content/uploads/Japanese-version-of-the-COSMIN-Risk-of-Bias-checklist-for-PROMs_final.pdf)  
+  + COSMINバイアスチェックリスト(日本語版)   
+
+## 環境  
+
+## パッケージのインストール  
+
+* インストールが済んでいない場合は, 下記を実行してください  
+
+```{r eval=FALSE, include=FALSE}
+install.packages("tidyverse")
+install.packages("psych")
+install.packages("HSAUR3")
+```
+
+## パッケージの読み込み  
+
+```{r}
+library(tidyverse)
+library(psych)
+library(HSAUR3)
+```
+
+## サンプルデータの説明  
+
+### bfiデータセット  
+
+* psychパッケージに含まれているサンプルデータ  
+
+* パーソナリティ(ビッグファイブ)に関連するデータ  
+  
+* 下記の28変数が2,800名分含まれている  
+  + A1 ~ A5 (Agreeableness)  
+  + C1 ~ C5 (Conscientiousness)  
+  + E1 ~ E5 (Extraversion)  
+  + N1 ~ N5 (Neuroticism)  
+  + O1 ~ O5 (Opennness)  
+  + gender: 性別 (1=男性, 2=女性)  
+  + education: 学歴 (1=高校, 2=高校卒業, 3=大学, 4=大学卒業, 5=大学院, NA=データなし)
+  + age: 年齢 
+
+* https://htsuda.net/stats/factor-analysis.htmlは入学と表記
+
+* help(bfi)で詳細を確認できます  
+
+### BtheBデータセット  
+
+* HSAUR3パッケージに含まれているサンプルデータ  
+
+* Beat the Bluesというプログラムを使ってうつ病患者に認知行動療法を適用した臨床試験の縦断データ
+  
+* 下記の8変数が100名分含まれている  
+  + drug: 抗うつ薬を服用していたか? (No, Yes)  
+  + length: 現在のうつ病エピソードの長さは? (<6m, >6m)
+  + treatment: 介入のグループは？ (TAU, BtheB)   
+  + bdi.pre: 介入前のBDI-II(ベック抑うつ調査票)  
+  + bdi.2m: 2ヶ月後のBDI-II  
+  + bdi.3m: フォローアップから1ヶ月後のBDI-II  
+  + bdi.5m: フォローアップから3ヶ月後のBDI-II  
+  + bdi.8m: フォローアップから6ヶ月後のBDI-II  
+
+* TAU(treatment as usual)=従来の治療群, BtheB(Beat the Blues)=インタラクティブなマルチメディアによる治療群
+
+* help(BtheB)で詳細を確認できます
+
+## ファイル名に日付を入れる
+
+* 図表のアウトプット時に日付8桁を挿入する
+
+```{r}
+today <- 
+  lubridate::today() %>% 
+  str_replace_all("-", "")
+```
+
+# PROMの開発 (Box.1)
+
+# 内容的妥当性 (Box.2)
+
+# 構造的妥当性 (Box.3)
+
+## 探索的因子分析
+
+## 確認的因子分析 ★
+
+* cfa()にordered=引数を入れると, DWLS法になるようです
+
+* 
+
+```{r eval=FALSE, include=FALSE}
+# パッケージの読み込み
+library(lavaan) 
+
+# モデルの指定
+bfi_model <- 'bfi_cfa = ~ A1 + A2 + A3 + A4 + A5'
+
+# DWLS推定
+fit_dwls <- cfa(bfi_model, 
+               data = df,
+               ordered = c("A1", "A2", "A3", "A4", "A5"))
+
+fit_wls_summary <- 
+  summary(fit_wls, fit.measures = TRUE, standardized = TRUE)
+
+fit_wls_summary_FIT <- 
+  fit_wls_summary$FIT %>% 
+  enframe() %>% 
+  mutate(value = as.numeric(value))
+
+fit_wls_summary_FIT %>% 
+  print(n = 35)
+
+# 出力
+# writexl::write_xlsx(fit_wls_summary_FIT,
+#                     path = str_c("result/study1_table_waaq_cfa_wls_fit_", today, ".xlsx"))
+
+fit_wls_summary_PE <- 
+  fit_wls_summary$PE
+
+fit_wls_summary_PE
+
+# 出力
+# writexl::write_xlsx(fit_wls_summary_PE,
+#                     path = str_c("result/study1_table_waaq_cfa_wls_parameter_estimates_", today, ".xlsx"))
+
+
+
+# 修正指標----------------------
+
+## WAAQ_5とWAAQ_6のmiが相対的に高く, 誤差項の相関が特に高そう
+# modificationIndices(fit_wls)
+
+# waaq_model2 <- 'WAAQ_cfa =~ WAAQ_1 + WAAQ_2 + WAAQ_3 + WAAQ_4 + WAAQ_5 + WAAQ_6 + WAAQ_7
+#                 WAAQ_5~~WAAQ_6'
+
+# fit_wls2 <- cfa(waaq_model2, data = df_waaq,
+#                 ordered = c("WAAQ_1", "WAAQ_2", "WAAQ_3", "WAAQ_4", "WAAQ_5", "WAAQ_6", "WAAQ_7"))
+
+# fit_wls_summary2 <-
+#   summary(fit_wls2, fit.measures = TRUE, standardized = TRUE)
+
+# fit_wls_summary_FIT2 <-
+#   fit_wls_summary2$FIT %>%
+#   enframe() %>%
+#   mutate(value = as.numeric(value))
+
+# fit_wls_summary_FIT2 %>%
+#   print(n = 35)
+
+# 出力
+# writexl::write_xlsx(fit_wls_summary_FIT2,
+#                     path = str_c("result/study1_table_waaq_cfa_wls_fit_model2_", today, ".xlsx"))
+
+# オブジェクトを削除
+rm(waaq_model,
+   fit_wls,
+   fit_wls_summary,
+   fit_wls_summary_FIT,
+   fit_wls_summary_PE)
+```
+
+
+# 内的一貫性 (Box.4)
+
+## クロンバックのアルファ ★
+
+```{r}
+# 変数をA1~A5に限定
+df_bfi_alpha <- 
+  bfi %>%
+  select(A1:A5)
+
+# アルファ係数を算出
+res_bfi_alpha <- 
+  alpha(df_bfi_alpha)
+
+# リストから必要な部分を取り出す
+table_bfi_alpha <- 
+  res_bfi_alpha$total %>% 
+  as_tibble()
+
+# 結果
+table_bfi_alpha
+
+# 出力
+writexl::write_xlsx(table_bfi_alpha,
+                    path = str_c("result/table_bfi_alpha_", today, ".xlsx"))
+
+# オブジェクトを削除
+rm(df_bfi_alpha,
+   res_bfi_alpha,
+   table_bfi_alpha)
+```
+
+## クロンバックのオメガ
+
+## KR-20
+
+## シータの標準誤差 (SE(θ))
+
+## 潜在特性値の信頼性係数
+
+# 異文化間妥当性/測定不変性 (Box.5)
+
+# 信頼性 (Box.6)
+
+## 級内相関係数 (ICC) ★
+
+
+
+## カッパ
+
+## 重み付きカッパ
+
+# 測定誤差 (Box.7)
+
+## 測定の標準誤差 (SEM) ★
+
+## 検出可能最小変化 (SDC) ★
+
+## 一致限界 (LoA) ★
+
+## (Bland-Altman plot)
+
+* [COSMIN Risk of Bias tool to assess the quality of studies on reliability and measurement error of outcome measurement instrument user manual](https://www.cosmin.nl/wp-content/uploads/user-manual-COSMIN-Risk-of-Bias-tool_v4_JAN_final.pdf)
+
+  + Bland-Altman plot(ブランドアルトマンプロット)は,同一の被験者に対して2回の測定を行い, x軸に2つの異なる測定法の平均値をプロットし, y軸に2つの測定法の差の平均値をプロットしたものです(p.42)。
+　+ 
+
+* やり方
+　+ 正規性を前提にしているため, まずはヒストグラムを描いてみる
+　+ ヒストグラムで正規性を判断できない場合は,統計的に確認してみてもよい(シャピロウィルク)
+　+ 
+　
+* 引用文献
+　+ [Giavarina, D. (2015). Understanding bland altman analysis. Biochemia medica, 25(2), 141-151.](https://hrcak.srce.hr/index.php?id_clanak_jezik=206210&show=clanak)
+　
+## 割合の一致
+
+# 基準関連妥当性 (Box.8)
+
+## 相関 ★
+
+## 受信者操作特性 (ROC) 曲線の下面積 (AUC)
+
+## 感度と特異度
+
+# 構成概念妥当性の仮説検証 (Box.9)
+
+# 応答性 (Box.10)
+
+# 参考文献
